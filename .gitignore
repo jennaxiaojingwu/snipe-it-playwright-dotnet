@@ -1,0 +1,20 @@
+# .NET build outputs
+bin/
+obj/
+
+# Test results and failure diagnostics (screenshots and traces)
+TestResults/
+*.trx
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# IDE and OS files
+.vs/
+.vscode/
+.idea/
+.DS_Store
+*.user
+*.suo
