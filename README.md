@@ -94,4 +94,4 @@ pwsh bin/Debug/net10.0/playwright.ps1 show-trace TestResults/your-trace-file.zip
 
 ## Notes
 
-The Snipe-IT demo is a shared public environment, so data may be changed or reset. Each run creates a new asset; automatic test data cleanup is not implemented.
+The Snipe-IT demo is a shared public environment where data may be changed or reset. Each test run creates a new asset. Automatic cleanup is not included in this assessment.
