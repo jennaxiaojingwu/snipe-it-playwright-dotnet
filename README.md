@@ -1,41 +1,31 @@
 # Snipe-IT Asset Automation
 
-An end-to-end UI automation test for the [Snipe-IT demo](https://demo.snipeitapp.com), built with **C#**, **.NET 10**, **Playwright for .NET**, and **NUnit**.
+An end-to-end UI test for the [Snipe-IT demo](https://demo.snipeitapp.com), built with **C#**, **.NET 10**, **Playwright for .NET**, and **NUnit**.
 
-## Scenario covered
+## Test scenario
 
 The `CreateCheckoutAndVerifyAsset` test:
 
 1. Logs in to the Snipe-IT demo.
-2. Creates a **Macbook Pro 13"** asset with **Ready to Deploy** status.
-3. Checks out the asset to a randomly selected available user.
-4. Searches the Assets list using the auto-generated Asset Tag and verifies that exactly one matching row is found.
-5. Opens the asset from the list and validates its details (Asset Tag, Model, Status, and assigned user).
-6. Verifies **create new** and **checkout** entries in the asset's **History** tab, including the assigned user and checkout notes.
+2. Creates a **Macbook Pro 13"** asset with **Ready to Deploy** status and checks it out to a randomly selected user.
+3. Searches for the asset by its auto-generated Asset Tag and verifies its Model, Status, and assigned user in the Assets list.
+4. Opens the asset details and validates the Asset Tag, Model, Status, and assigned user.
+5. Verifies the **create new** and **checkout** records in the History tab, including the checkout user and notes.
 
-## Technology
+## Tech stack
 
-- .NET 10 (`net10.0`)
-- C# and Playwright for .NET (`Microsoft.Playwright.NUnit`)
-- NUnit test framework
-- Page Object Model (POM), with a reusable header component
+- C# / .NET 10
+- Playwright for .NET and NUnit
+- Page Object Model (POM) with a reusable header component
 
 ## Project structure
 
 ```text
 SnipeItAutomation/
-├── Components/
-│   └── HeaderComponent.cs
-├── Configuration/
-│   └── TestConfig.cs
-├── Pages/
-│   ├── LoginPage.cs
-│   ├── CreateAssetPage.cs
-│   ├── AssetsPage.cs
-│   └── AssetDetailsPage.cs
-├── Tests/
-│   ├── BaseTest.cs
-│   └── AssetTests.cs
+├── Components/       # Shared UI components
+├── Configuration/    # Environment configuration
+├── Pages/            # Page Objects
+├── Tests/            # E2E test and BaseTest
 ├── .gitignore
 ├── README.md
 └── SnipeItAutomation.csproj
@@ -44,12 +34,12 @@ SnipeItAutomation/
 ## Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
-- [PowerShell (`pwsh`)](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell) to run the Playwright browser installer script
-- Internet connection to access the public Snipe-IT demo
+- [PowerShell (`pwsh`)](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell) to install Playwright browsers
+- Internet access to the Snipe-IT demo
 
-## Setup
+## Setup and run
 
-From the project directory:
+From the project root, restore dependencies, build, and install Chromium:
 
 ```bash
 dotnet restore
@@ -57,82 +47,51 @@ dotnet build
 pwsh bin/Debug/net10.0/playwright.ps1 install chromium
 ```
 
-To also run Firefox and WebKit tests, install their browser binaries:
-
-```bash
-pwsh bin/Debug/net10.0/playwright.ps1 install firefox webkit
-```
-
-## Run the test
-
-Run the test with Chromium (headless, default):
+Run the test:
 
 ```bash
 dotnet test --filter "Name=CreateCheckoutAndVerifyAsset" -- Playwright.BrowserName=chromium
 ```
 
-To see the browser during execution:
+To watch the browser during execution:
 
 ```bash
 dotnet test --filter "Name=CreateCheckoutAndVerifyAsset" -- Playwright.BrowserName=chromium Playwright.LaunchOptions.Headless=false
 ```
 
-To run the same test on other browser engines:
+To run with Firefox or WebKit, install the browsers and select one:
 
 ```bash
+pwsh bin/Debug/net10.0/playwright.ps1 install firefox webkit
+
 dotnet test --filter "Name=CreateCheckoutAndVerifyAsset" -- Playwright.BrowserName=firefox
 dotnet test --filter "Name=CreateCheckoutAndVerifyAsset" -- Playwright.BrowserName=webkit
 ```
 
-**Note:** Playwright WebKit is not the same as testing the installed Safari application.
+The test has been run successfully locally with Chromium, Firefox, and WebKit. Playwright WebKit is not identical to testing the installed Safari application.
 
 ## Configuration
 
-`Configuration/TestConfig.cs` reads optional environment variables and uses the public demo defaults if they are not set:
+`Configuration/TestConfig.cs` uses the public demo URL and demo login credentials by default. Override them with environment variables if needed:
 
-| Variable | Purpose |
-| --- | --- |
-| `SNIPEIT_BASE_URL` | Snipe-IT environment base URL |
-| `SNIPEIT_USERNAME` | Login username |
-| `SNIPEIT_PASSWORD` | Login password |
+- `SNIPEIT_BASE_URL`
+- `SNIPEIT_USERNAME`
+- `SNIPEIT_PASSWORD`
 
-No additional environment variables are required for the public demo. For other environments, supply credentials through environment variables rather than committing them to the repository.
+Do not commit private credentials to the repository.
 
-## Design choices
+## Test design and diagnostics
 
-- **POM:** Page interactions are separated from the test's business-level assertions.
-- **Reusable navigation:** `HeaderComponent` handles shared header actions.
-- **Dynamic test data:** The test captures the automatically generated Asset Tag and reuses it for subsequent validations.
-- **Random user:** A user is randomly selected from the currently loaded eligible dropdown options. The same user may be selected on different runs.
-- **Auto-waiting:** Uses Playwright locators and web-first assertions instead of fixed sleeps.
-- **Failure diagnostics:** `BaseTest` captures a screenshot and Playwright trace on failure, helping investigate failed steps.
+Page interactions are organised using POM. The test reuses the generated Asset Tag and selected user for verification, uses Playwright auto-waiting and assertions, and does not rely on fixed sleeps. Random user selection is from the currently loaded eligible dropdown options; the same user can be selected on separate runs.
 
-## Failure diagnostics
-
-When a test fails, `BaseTest` saves a full-page screenshot (`.png`) and a Playwright trace (`.zip`) in the root `TestResults/` directory. Successful test runs do not retain these artifacts.
-
-To open a generated trace in Playwright Trace Viewer, run the following command from the project root, replacing the placeholder with the actual ZIP filename:
+On failure, `BaseTest` saves a screenshot (`.png`) and Playwright trace (`.zip`) in `TestResults/`. To inspect a trace:
 
 ```bash
 pwsh bin/Debug/net10.0/playwright.ps1 show-trace TestResults/your-trace-file.zip
 ```
 
-Do not commit screenshots or trace archives, as they may contain session or page data. The `TestResults/` directory is listed in `.gitignore`.
+`TestResults/` is excluded from Git because diagnostics may contain page or session data.
 
-## Local test execution results
+## Notes
 
-The following runs were completed locally on 16 October 2026:
-
-| Browser engine | Runs | Passed |
-| --- | ---: | ---: |
-| Chromium | 3 | 3 |
-| Firefox | 1 | 1 |
-| WebKit | 1 | 1 |
-
-These results are a snapshot of local execution, not a guarantee that the shared demo will always be available.
-
-## Notes and limitations
-
-- The Snipe-IT demo is a **shared public environment**. Its data can change or be reset, so occasional external-environment failures are possible.
-- Each test run creates a new asset. No automatic cleanup is performed; created records may remain available for inspection until the public demo data changes or is reset.
-- Serial number is left empty because it is not required for the requested scenario.
+The Snipe-IT demo is a shared public environment, so data may be changed or reset. Each run creates a new asset; automatic test data cleanup is not implemented.
